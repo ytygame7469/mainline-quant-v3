@@ -221,17 +221,18 @@ def get_hot_stocks_from_billboard(billboard_df: pd.DataFrame, top_n: int = 10) -
         return []
     
     # 按股票代码分组统计
-    grouped = billboard_df.groupby('stock_code').agg({
-        'stock_name': 'first',
-        'net_amount': 'sum',
-        'close_price': 'first',
-        'change_pct': 'first'
-    }).reset_index()
+    agg_dict = {'net_amount': 'sum'}
+    
+    if 'stock_name' in billboard_df.columns:
+        agg_dict['stock_name'] = 'first'
     
     # 按净买入排序
-    grouped_sorted = grouped.sort_values('net_amount', ascending=False).head(top_n)
-    
-    return grouped_sorted.to_dict('records')
+    if 'stock_code' in billboard_df.columns:
+        grouped = billboard_df.groupby('stock_code').agg(agg_dict).reset_index()
+        grouped_sorted = grouped.sort_values('net_amount', ascending=False).head(top_n)
+        return grouped_sorted.to_dict('records')
+    else:
+        return []
 
 
 if __name__ == '__main__':

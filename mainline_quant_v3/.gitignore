@@ -102,3 +102,50 @@ Thumbs.db
 *.tmp
 *.bak
 temp/
+
+# References and external repos
+references/
+aiagents-stock/
+czsc/
+quant-trading/
+zer0share/
+
+# Data directories
+data/
+
+# Test scripts (workspace root level)
+check_local_data.py
+example.py
+simple_test.py
+fetch_real_data.sh
+generate_data_fast.py
+generate_data_final.py
+generate_realistic_data.py
+test_adata_full.py
+test_adata_full_api.py
+test_adata_full_api_v2.py
+test_adata_local.py
+test_all_data_sources_final.py
+test_ashare.py
+test_ashare_direct.py
+test_data_sources.py
+test_mainline_complete.py
+test_network.py
+test_no_proxy.py
+test_without_proxy.py
+
+# Reports (workspace root level)
+ADATA_API_COMPLETE_GUIDE.md
+API_ULTIMATE_GUIDE.md
+DATA_ACQUISITION_TEST_REPORT.md
+DATA_FETCHER_IMPROVEMENT_REPORT.md
+DATA_SOURCE_FINAL_REPORT.md
+DEVELOPMENT_SUMMARY.md
+LLM_FINAL_REPORT.md
+LLM_TEAM_DISCUSSION_20_ROUNDS.md
+LLM_TEAM_DISCUSSION_REPORT.md
+LLM_TEAM_FINAL_REPORT_V3.md
+LLM_TEAM_REPORT_100_ITERATIONS.md
+NETWORK_DATA_SOURCE_TEST_REPORT.md
+REAL_DATA_VERIFICATION_REPORT.md
+adata_API_Reference.md
