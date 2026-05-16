@@ -390,6 +390,48 @@ def _hot_rank_east():
     return rank_df[["rank", "stock_code", "short_name", "price", "change", "change_pct"]]
 
 
+def _billboard_east(date=None, page=1, page_size=50):
+    url = "https://datacenter-web.eastmoney.com/api/data/v1/get"
+    end_date = date or datetime.now().strftime("%Y-%m-%d")
+    start_date = (datetime.now().replace(day=1)).strftime("%Y-%m-%d")
+    params = {
+        "sortColumns": "TRADE_DATE,SECURITY_CODE",
+        "sortTypes": "-1,-1",
+        "pageSize": page_size,
+        "pageNumber": page,
+        "reportName": "RPT_DRAGON_LIST",
+        "columns": "ALL",
+        "filter": f'(TRADE_DATE>="{start_date}")(TRADE_DATE<="{end_date}")',
+    }
+    r = _request("get", url, params=params)
+    if r is None:
+        return pd.DataFrame()
+    res = r.json()
+    if res.get("result") is None:
+        return pd.DataFrame()
+    data = res["result"].get("data", [])
+    if not data:
+        return pd.DataFrame()
+    df = pd.DataFrame(data)
+    rename = {
+        "TRADE_DATE": "trade_date",
+        "SECURITY_CODE": "stock_code",
+        "SECURITY_NAME_ABBR": "stock_name",
+        "CLOSE_PRICE": "close_price",
+        "CHANGE_RATE": "change_pct",
+        "TURNOVER_RATE": "turnover_rate",
+        "BUYER_NAME": "buyer_name",
+        "SELLER_NAME": "seller_name",
+        "NET_AMOUNT": "net_amount",
+        "EXPLANATION": "explanation",
+    }
+    df = df.rename(columns=rename)
+    for col in ["close_price", "change_pct", "net_amount"]:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+    return df
+
+
 class Collector:
 
     def __init__(self):
@@ -422,8 +464,8 @@ class Collector:
     def get_hot_rank(self):
         return _hot_rank_east()
 
-    def get_billboard(self):
-        return pd.DataFrame()
+    def get_billboard(self, date=None, page=1, page_size=50):
+        return _billboard_east(date, page, page_size)
 
 
 collector = Collector()
