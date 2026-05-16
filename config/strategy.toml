@@ -1,0 +1,37 @@
+[mainline_strategy]
+name = "主线策略"
+enabled = true
+min_mainline_score = 60
+max_stocks = 5
+holding_period_days = 20
+
+[leader_strategy]
+name = "龙头策略"
+enabled = true
+min_leader_score = 70
+max_stocks = 3
+holding_period_days = 10
+
+[chan_strategy]
+name = "缠论策略"
+enabled = false
+min_confidence = 60
+fractal_lookback = 5
+stroke_min_bars = 5
+
+[signal_weights]
+trend = 0.30
+momentum = 0.25
+volume = 0.25
+fund_flow = 0.20
+
+[ai_weights]
+tech_analyst = 0.30
+fund_analyst = 0.30
+flow_analyst = 0.25
+sentiment_analyst = 0.15
+
+[decision]
+ai_weight = 0.30
+strategy_weight = 0.70
+min_confidence_for_trade = 60

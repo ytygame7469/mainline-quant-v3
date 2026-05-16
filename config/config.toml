@@ -1,0 +1,51 @@
+[project]
+name = "mainline_quant_v3"
+version = "3.0.0"
+description = "量化交易系统 v3"
+
+[ai_engine]
+api_key = ""
+base_url = "https://api.deepseek.com"
+model = "deepseek-chat"
+temperature = 0.3
+max_tokens = 800
+parallel_agents = true
+
+[data_engine]
+source_priority = ["eastmoney", "sina", "tencent"]
+cache_enabled = true
+cache_ttl_minutes = 5
+
+[trade_engine]
+broker = "simulator"
+initial_capital = 1000000
+commission_rate = 0.0003
+slippage = 0.001
+
+[backtest_engine]
+initial_capital = 100000
+commission_rate = 0.0003
+slippage = 0.001
+benchmark = "000300.SH"
+
+[monitor_engine]
+concept_pct_threshold = 3.0
+concept_volume_ratio_threshold = 2.0
+leader_pct_threshold = 5.0
+leader_volume_ratio_threshold = 1.5
+check_interval_seconds = 60
+
+[notify]
+dingtalk_webhook = ""
+dingtalk_secret = ""
+feishu_webhook = ""
+feishu_secret = ""
+console_enabled = true
+
+[logging]
+level = "INFO"
+log_dir = "logs"
+trade_log_enabled = true
+trade_log_file = "logs/trade.log"
+max_file_size_mb = 100
+backup_count = 10
