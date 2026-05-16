@@ -4,13 +4,16 @@
 
 1. [系统简介](#1-系统简介)
 2. [数据获取模块（超级详细）](#2-数据获取模块超级详细)
-3. [回测引擎](#3-回测引擎)
-4. [策略引擎](#4-策略引擎)
-5. [风控系统](#5-风控系统)
-6. [AI分析模块](#6-ai分析模块)
-7. [交易执行](#7-交易执行)
-8. [快速开始](#8-快速开始)
-9. [常见问题与故障排查](#9-常见问题与故障排查)
+3. **[连板队列识别模块](#3-连板队列识别模块)** ⭐⭐⭐ 新功能
+4. **[龙虎榜分析模块](#4-龙虎榜分析模块)** ⭐⭐⭐ 新功能
+5. **[涨停原因与主线扩散分析](#5-涨停原因与主线扩散分析)** ⭐⭐⭐ 新功能
+6. [回测引擎](#6-回测引擎)
+7. [策略引擎](#7-策略引擎)
+8. [风控系统](#8-风控系统)
+9. [AI分析模块](#9-ai分析模块)
+10. [交易执行](#10-交易执行)
+11. [快速开始](#11-快速开始)
+12. [常见问题与故障排查](#12-常见问题与故障排查)
 
 ---
 
@@ -662,9 +665,280 @@ if df.empty:
 
 ---
 
-## 3. 回测引擎
+## 3. 连板队列识别模块 ⭐⭐⭐
 
-### 3.1 什么是回测？
+### 3.1 什么是连板队列？
+
+连板队列是识别A股市场中连续涨停股票的重要工具，是捕捉主线行情的核心。
+
+**核心功能：**
+- 识别每日涨停股票
+- 计算连板高度
+- 识别龙头股
+- 构建连板队列
+
+### 3.2 模块位置
+
+```
+/workspace/mainline_quant_v3/strategy_engine/limit_up_queue.py
+```
+
+### 3.3 核心函数详解
+
+#### 3.3.1 `identify_limit_up_stocks()` - 识别涨停股票
+
+```python
+from strategy_engine.limit_up_queue import identify_limit_up_stocks
+
+# 识别指定日期的涨停股
+limit_up_list = identify_limit_up_stocks(stock_kline_data, '2024-12-31')
+
+for stock in limit_up_list:
+    print(f"{stock['stock_code']}: {stock['change_pct']:.1f}%")
+```
+
+**说明：**
+- 主板股票涨停阈值：9.8%
+- 创业板/科创板股票涨停阈值：19.8%
+- 自动识别股票板块
+
+#### 3.3.2 `calculate_consecutive_limit_ups()` - 计算连板高度
+
+```python
+from strategy_engine.limit_up_queue import calculate_consecutive_limit_ups
+
+# 计算单只股票的连板高度
+con_days, limit_dates = calculate_consecutive_limit_ups(stock_kline)
+
+print(f"连板高度: {con_days}")
+print(f"涨停日期: {limit_dates}")
+```
+
+**返回值：**
+- `con_days`: 连续涨停天数
+- `limit_dates`: 涨停日期列表
+
+#### 3.3.3 `build_limit_up_queue()` - 构建连板队列
+
+```python
+from strategy_engine.limit_up_queue import build_limit_up_queue
+
+# 构建连板队列（按连板高度排序）
+limit_up_queue = build_limit_up_queue(stock_dict)
+
+print("连板队列:")
+print(limit_up_queue[['stock_code', 'consecutive_days', 'is_leader']])
+```
+
+#### 3.3.4 `identify_leader_stocks()` - 识别龙头股
+
+```python
+from strategy_engine.limit_up_queue import identify_leader_stocks
+
+# 识别龙头股（默认>=3板）
+leaders = identify_leader_stocks(limit_up_queue, leader_threshold=3)
+
+print(f"发现 {len(leaders)} 只龙头股")
+```
+
+### 3.4 连板队列数据结构
+
+```python
+{
+    'stock_code': '600519',
+    'short_name': '贵州茅台',
+    'consecutive_days': 5,     # 连板高度
+    'limit_up_dates': [...],   # 涨停日期
+    'is_leader': True          # 是否龙头
+}
+```
+
+---
+
+## 4. 龙虎榜分析模块 ⭐⭐⭐
+
+### 4.1 什么是龙虎榜？
+
+龙虎榜是A股市场每天收盘后公布的异动股票交易数据，包含主力资金的买卖情况。
+
+**核心功能：**
+- 获取龙虎榜数据
+- 识别机构专用席位
+- 分析龙虎榜上榜后次日表现
+- 提取热门股
+
+### 4.2 模块位置
+
+```
+/workspace/mainline_quant_v3/strategy_engine/billboard_analyzer.py
+```
+
+### 4.3 核心函数详解
+
+#### 4.3.1 `get_billboard_data()` - 获取龙虎榜数据
+
+```python
+from strategy_engine.billboard_analyzer import get_billboard_data
+
+# 获取今日龙虎榜
+billboard_df = get_billboard_data(date='2024-12-31')
+
+print(f"获取到 {len(billboard_df)} 条龙虎榜数据")
+```
+
+#### 4.3.2 `analyze_billboard_stock()` - 分析单只股票的龙虎榜
+
+```python
+from strategy_engine.billboard_analyzer import analyze_billboard_stock
+
+# 分析茅台的龙虎榜
+analysis = analyze_billboard_stock(billboard_df, '600519')
+
+print(f"上榜次数: {analysis['on_list_count']}")
+print(f"总净买入: {analysis['total_net_amount']}")
+```
+
+#### 4.3.3 `identify_institutional_buyers()` - 识别机构专用席位
+
+```python
+from strategy_engine.billboard_analyzer import identify_institutional_buyers
+
+# 识别机构买入
+institutional_buys = identify_institutional_buyers(billboard_df)
+
+for buy in institutional_buys:
+    print(f"{buy['stock_code']}: {buy['buyer_name']}")
+```
+
+#### 4.3.4 `analyze_next_day_performance()` - 分析龙虎榜次日表现
+
+```python
+from strategy_engine.billboard_analyzer import analyze_next_day_performance
+
+# 分析上榜后的次日表现
+next_day = analyze_next_day_performance(
+    '2024-12-30',  # 上榜日期
+    stock_kline, 
+    '600519'
+)
+
+print(f"次日涨跌幅: {next_day['next_change_pct']:.1f}%")
+```
+
+### 4.4 龙虎榜数据字段
+
+```python
+{
+    'stock_code': '600519',
+    'stock_name': '贵州茅台',
+    'buyer_name': '机构专用',
+    'buy_amount': 150000000.0,  # 买入金额
+    'sell_amount': 50000000.0,  # 卖出金额
+    'net_amount': 100000000.0    # 净买入
+}
+```
+
+---
+
+## 5. 涨停原因与主线扩散分析 ⭐⭐⭐
+
+### 5.1 什么是主线扩散效应？
+
+主线扩散是指：当某个板块成为热点后，资金会向该板块的上下游、相关概念蔓延的过程。
+
+**核心功能：**
+- 识别涨停原因
+- 分析概念板块联动
+- 检测主线扩散效应
+- 构建概念热度层级
+
+### 5.2 模块位置
+
+```
+/workspace/mainline_quant_v3/strategy_engine/main_line_analysis.py
+```
+
+### 5.3 核心函数详解
+
+#### 5.3.1 `identify_limit_up_reason()` - 识别涨停原因
+
+```python
+from strategy_engine.main_line_analysis import identify_limit_up_reason
+
+# 识别涨停原因
+reasons = identify_limit_up_reason(limit_up_df, concept_stocks_dict)
+
+for stock in reasons:
+    print(f"{stock['stock_code']}: {stock['reason']}")
+```
+
+#### 5.3.2 `analyze_concept_co_movement()` - 分析概念板块联动
+
+```python
+from strategy_engine.main_line_analysis import analyze_concept_co_movement
+
+# 分析概念联动
+co_movement = analyze_concept_co_movement(concept_stocks_dict, limit_up_df)
+
+for concept, perf in co_movement.items():
+    print(f"{concept}: 涨停占比 {perf['limit_up_ratio']*100:.1f}%")
+```
+
+#### 5.3.3 `detect_main_line_diffusion()` - 检测主线扩散效应
+
+```python
+from strategy_engine.main_line_analysis import detect_main_line_diffusion
+
+# 检测主线扩散
+diffusion = detect_main_line_diffusion(co_movement, concept_stocks_dict)
+
+print(f"热门概念: {diffusion['hot_concepts']}")
+print(f"主线强度: {diffusion['main_line_strength']:.1f}/100")
+```
+
+#### 5.3.4 `build_concept_hierarchy()` - 构建概念热度层级
+
+```python
+from strategy_engine.main_line_analysis import build_concept_hierarchy
+
+# 构建概念层级
+hierarchy = build_concept_hierarchy(concept_stocks_dict, limit_up_df)
+
+print(f"核心概念: {hierarchy['core_concepts']}")
+print(f"主要概念: {hierarchy['major_concepts']}")
+print(f"是否为主线行情: {'是' if hierarchy['is_main_line'] else '否'}")
+```
+
+### 5.4 概念热度层级
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                     概念热度层级                           │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │  核心概念（涨停占比 >= 50%）                     │   │
+│  │  - 最强的主线，资金最集中                         │   │
+│  └─────────────────────────────────────────────────┘   │
+│                                                         │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │  主要概念（涨停占比 >= 20%）                     │   │
+│  │  - 次要主线，资金开始扩散                         │   │
+│  └─────────────────────────────────────────────────┘   │
+│                                                         │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │  次要概念（涨停占比 < 20%）                      │   │
+│  │  - 非主流，资金关注度低                          │   │
+│  └─────────────────────────────────────────────────┘   │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 6. 回测引擎
+
+### 6.1 什么是回测？
 
 **回测** = 用历史数据测试策略表现
 
@@ -756,7 +1030,7 @@ python run_backtest.py --concept BK0891 --start 2024-01-01 --end 2024-12-31 --ca
 
 ---
 
-## 4. 策略引擎
+## 7. 策略引擎
 
 ### 4.1 主线评分策略（核心）
 
@@ -885,7 +1159,7 @@ def generate_signals(self, daily_data, current_date, positions):
 
 ---
 
-## 5. 风控系统
+## 8. 风控系统
 
 ### 5.1 五层风控体系
 
@@ -958,7 +1232,7 @@ def calculate_kelly_position(win_rate, profit_loss_ratio, total_capital):
 
 ---
 
-## 6. AI分析模块
+## 9. AI分析模块
 
 ### 6.1 四大AI智能体
 
@@ -1035,7 +1309,7 @@ def calculate_kelly_position(win_rate, profit_loss_ratio, total_capital):
 
 ---
 
-## 7. 交易执行
+## 10. 交易执行
 
 ### 7.1 模拟交易 vs 实盘交易
 
@@ -1085,7 +1359,7 @@ OrderStatus = {
 
 ---
 
-## 8. 快速开始
+## 11. 快速开始
 
 ### 8.1 环境要求
 
@@ -1119,7 +1393,7 @@ cat backtest_report.json | python -m json.tool
 
 ---
 
-## 9. 常见问题与故障排查
+## 12. 常见问题与故障排查
 
 ### 9.1 数据获取问题
 
