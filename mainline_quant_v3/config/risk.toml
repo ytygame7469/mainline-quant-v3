@@ -1,0 +1,52 @@
+[position]
+max_total_position = 0.80
+max_single_stock = 0.05
+max_single_sector = 0.20
+min_cash_reserve = 0.20
+max_concentration_top3 = 0.40
+single_trade_ratio = 0.05
+batch_build_steps = 3
+batch_clear_steps = 2
+
+[stop]
+fixed_stop_loss = -0.08
+atr_stop_multiplier = 2.0
+trailing_stop_drawdown = -0.05
+time_stop_days = 20
+time_stop_min_return = 0.01
+structural_ma_period = 60
+structural_support_lookback = 120
+take_profit_fixed = 0.30
+take_profit_rr_ratio = 3.0
+
+[budget]
+daily_max_loss = -0.02
+weekly_max_loss = -0.05
+monthly_max_loss = -0.10
+consecutive_loss_breaker = 3
+max_drawdown_forced_reduce = -0.15
+var_confidence = 0.95
+cvar_confidence = 0.95
+var_lookback = 252
+risk_free_rate = 0.025
+
+[stress]
+crash_2015_drop = -0.35
+circuit_breaker_2016_drop = -0.25
+covid_2020_drop = -0.15
+black_swan_drop = -0.20
+liquidity_crisis_drop = -0.30
+monte_carlo_simulations = 10000
+monte_carlo_horizon = 252
+monte_carlo_confidence = 0.95
+
+[market_regime]
+adjustment_enabled = true
+bear_market_multiplier = 0.50
+volatile_market_multiplier = 0.75
+bull_market_multiplier = 1.00
+
+[features]
+enable_circuit_breaker = true
+enable_var_monitor = true
+enable_stress_test = true
